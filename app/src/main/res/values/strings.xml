@@ -1,0 +1,8 @@
+<resources>
+    <string name="app_name">memoAppV1.0</string>
+    <string name="Memo_Name_hint">メモ名入力</string>
+    <string name="Memo_Describe_hint">メモ内容入力</string>
+    <string name="Memo_Load_image">画像編集</string>
+    <string name="Memo_UnLoad_image">キャンセル</string>
+    <string name="Memo_Even_color">イベント色</string>
+</resources>
