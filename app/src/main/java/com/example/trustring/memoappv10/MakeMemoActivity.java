@@ -11,7 +11,12 @@ import android.widget.ImageView;
 import android.widget.Toast;
 
 import java.io.IOException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
+
+import slideDateTimePicker.SlideDateTimeListener;
+import slideDateTimePicker.SlideDateTimePicker;
 
 public class MakeMemoActivity extends AppCompatActivity {
     private static final int SELECT_SINGLE_PICTURE = 101;
@@ -21,13 +26,16 @@ public class MakeMemoActivity extends AppCompatActivity {
     public static final String IMAGE_TYPE = "image/*";
 
     private ImageView selectedImagePreview;
+
+    private SimpleDateFormat mFormatter = new SimpleDateFormat("MMMM dd yyyy hh:mm aa");
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_make_memo);
     }
-    public void onClick (View view)
-    {
+
+    public void onClick(View view) {
         switch (view.getId()) {
             case R.id.btnLoadImage:
                 Intent intent = new Intent();
@@ -35,10 +43,40 @@ public class MakeMemoActivity extends AppCompatActivity {
                 intent.setAction(Intent.ACTION_GET_CONTENT);
                 startActivityForResult(Intent.createChooser(intent,
                         "Select Picture"), SELECT_SINGLE_PICTURE);
-                selectedImagePreview = (ImageView)findViewById(R.id.imageView);
+                selectedImagePreview = (ImageView) findViewById(R.id.imageView);
+                break;
+            case R.id.tvFrom:
+                new SlideDateTimePicker.Builder(getSupportFragmentManager())
+                        .setListener(listener)
+                        .setInitialDate(new Date())
+                        .build()
+                        .show();
+                break;
+            case R.id.tvTo:
+                new SlideDateTimePicker.Builder(getSupportFragmentManager())
+                        .setListener(listener)
+                        .setInitialDate(new Date())
+                        .build()
+                        .show();
                 break;
         }
     }
+
+    private SlideDateTimeListener listener = new SlideDateTimeListener() {
+
+        @Override
+        public void onDateTimeSet(Date date) {
+            Toast.makeText(MakeMemoActivity.this,
+                    mFormatter.format(date), Toast.LENGTH_SHORT).show();
+        }
+
+        // Optional cancel listener
+        @Override
+        public void onDateTimeCancel() {
+            Toast.makeText(MakeMemoActivity.this,
+                    "Canceled", Toast.LENGTH_SHORT).show();
+        }
+    };
 
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
         if (resultCode == RESULT_OK) {
@@ -53,15 +91,14 @@ public class MakeMemoActivity extends AppCompatActivity {
                 // original code
 //                String selectedImagePath = getPath(selectedImageUri);
 //                selectedImagePreview.setImageURI(selectedImageUri);
-            }
-            else if (requestCode == SELECT_MULTIPLE_PICTURE) {
+            } else if (requestCode == SELECT_MULTIPLE_PICTURE) {
                 //And in the Result handling check for that parameter:
                 if (Intent.ACTION_SEND_MULTIPLE.equals(data.getAction())
                         && data.hasExtra(Intent.EXTRA_STREAM)) {
                     // retrieve a collection of selected images
                     ArrayList<Parcelable> list = data.getParcelableArrayListExtra(Intent.EXTRA_STREAM);
                     // iterate over these images
-                    if( list != null ) {
+                    if (list != null) {
                         for (Parcelable parcel : list) {
                             Uri uri = (Uri) parcel;
                             // handle the images one by one here
@@ -69,7 +106,7 @@ public class MakeMemoActivity extends AppCompatActivity {
                     }
 
                     // for now just show the last picture
-                    if( !list.isEmpty() ) {
+                    if (!list.isEmpty()) {
                         Uri imageUri = (Uri) list.get(list.size() - 1);
 
                         try {
