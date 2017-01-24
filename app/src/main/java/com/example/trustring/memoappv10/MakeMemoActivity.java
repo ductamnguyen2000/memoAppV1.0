@@ -7,13 +7,18 @@ import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
+import android.widget.DatePicker;
 import android.widget.ImageView;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import java.io.IOException;
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Date;
+import java.util.IllegalFormatCodePointException;
 
 import slideDateTimePicker.SlideDateTimeListener;
 import slideDateTimePicker.SlideDateTimePicker;
@@ -33,6 +38,15 @@ public class MakeMemoActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_make_memo);
+        TextView tvFrom = (TextView) findViewById(R.id.tvFrom);
+        tvFrom.setText(mFormatter.format(new Date()));
+
+
+        Calendar calendar = Calendar.getInstance();
+        calendar.setTime(new Date());
+        calendar.add(Calendar.HOUR, 2);
+        TextView tvTo = (TextView) findViewById(R.id.tvTo);
+        tvTo.setText(mFormatter.format(calendar.getTime()));
     }
 
     public void onClick(View view) {
@@ -47,14 +61,14 @@ public class MakeMemoActivity extends AppCompatActivity {
                 break;
             case R.id.tvFrom:
                 new SlideDateTimePicker.Builder(getSupportFragmentManager())
-                        .setListener(listener)
+                        .setListener(listenerfrom)
                         .setInitialDate(new Date())
                         .build()
                         .show();
                 break;
             case R.id.tvTo:
                 new SlideDateTimePicker.Builder(getSupportFragmentManager())
-                        .setListener(listener)
+                        .setListener(listenerto)
                         .setInitialDate(new Date())
                         .build()
                         .show();
@@ -62,19 +76,56 @@ public class MakeMemoActivity extends AppCompatActivity {
         }
     }
 
-    private SlideDateTimeListener listener = new SlideDateTimeListener() {
+    private SlideDateTimeListener listenerfrom = new SlideDateTimeListener() {
 
         @Override
         public void onDateTimeSet(Date date) {
-            Toast.makeText(MakeMemoActivity.this,
-                    mFormatter.format(date), Toast.LENGTH_SHORT).show();
+            TextView tvFrom = (TextView) findViewById(R.id.tvFrom);
+            TextView tvTo = (TextView) findViewById(R.id.tvTo);
+            tvFrom.setText(mFormatter.format(date));
+            try {
+                Date dateTo = mFormatter.parse(tvTo.getText().toString());
+                if (date.compareTo(dateTo) <1) {
+
+                } else {
+                    tvTo.setText(mFormatter.format(date));
+                    Toast.makeText(MakeMemoActivity.this, "Date From > Date To!", Toast.LENGTH_SHORT).show();
+                }
+            } catch (ParseException e) {
+
+            }
+
+        }
+        // Optional cancel listener
+        @Override
+        public void onDateTimeCancel() {
+
+        }
+    };
+
+    private SlideDateTimeListener listenerto = new SlideDateTimeListener() {
+
+        @Override
+        public void onDateTimeSet(Date date) {
+            TextView tvFrom = (TextView) findViewById(R.id.tvFrom);
+            TextView tvTo = (TextView) findViewById(R.id.tvTo);
+            try {
+                Date dateFrom = mFormatter.parse(tvFrom.getText().toString());
+                if (dateFrom.compareTo(date) <1) {
+                    tvTo.setText(mFormatter.format(date));
+                } else {
+                    tvTo.setText(dateFrom.toString());
+                    Toast.makeText(MakeMemoActivity.this, "Date From > Date To!", Toast.LENGTH_SHORT).show();
+                }
+            } catch (ParseException e) {
+
+            }
         }
 
         // Optional cancel listener
         @Override
         public void onDateTimeCancel() {
-            Toast.makeText(MakeMemoActivity.this,
-                    "Canceled", Toast.LENGTH_SHORT).show();
+
         }
     };
 
