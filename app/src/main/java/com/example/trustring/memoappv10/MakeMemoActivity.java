@@ -1,6 +1,7 @@
 package com.example.trustring.memoappv10;
 
 import android.content.Intent;
+import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.Parcelable;
 import android.support.v7.app.AppCompatActivity;
@@ -12,6 +13,7 @@ import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import java.io.File;
 import java.io.IOException;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -33,9 +35,12 @@ public class MakeMemoActivity extends AppCompatActivity {
     private ImageView selectedImagePreview;
 
     private SimpleDateFormat mFormatter = new SimpleDateFormat("MMMM dd yyyy hh:mm aa");
+    boolean checkFirstTime = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        checkFirstTime=true;
+
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_make_memo);
         TextView tvFrom = (TextView) findViewById(R.id.tvFrom);
@@ -49,14 +54,35 @@ public class MakeMemoActivity extends AppCompatActivity {
         tvTo.setText(mFormatter.format(calendar.getTime()));
     }
 
+    @Override
+    protected void onStart() {
+        Intent intent = getIntent();
+        if (intent.getStringExtra(MainActivity.PATHIMAGE) != null && checkFirstTime) {
+            Log.d("ABCDEF", "First time  " + intent.getStringExtra(MainActivity.PATHIMAGE));
+            selectedImagePreview = (ImageView) findViewById(R.id.imageView);
+            selectedImagePreview.setImageURI(Uri.parse(new File(intent.getStringExtra(MainActivity.PATHIMAGE)).toString()));
+        }
+        super.onStart();
+    }
+
+    @Override
+    protected void onResume() {
+
+
+        super.onResume();
+    }
+
     public void onClick(View view) {
         switch (view.getId()) {
             case R.id.btnLoadImage:
+                Log.d("ABCDEF", "CLICKKKK  ");
                 Intent intent = new Intent();
                 intent.setType(IMAGE_TYPE);
                 intent.setAction(Intent.ACTION_GET_CONTENT);
+                Log.d("ABCDEF", "CLICKKKK 2 ");
                 startActivityForResult(Intent.createChooser(intent,
                         "Select Picture"), SELECT_SINGLE_PICTURE);
+                Log.d("ABCDEF", "CLICKKKK 3 ");
                 selectedImagePreview = (ImageView) findViewById(R.id.imageView);
                 break;
             case R.id.tvFrom:
@@ -76,6 +102,11 @@ public class MakeMemoActivity extends AppCompatActivity {
         }
     }
 
+    @Override
+    protected void onStop() {
+        super.onStop();
+    }
+
     private SlideDateTimeListener listenerfrom = new SlideDateTimeListener() {
 
         @Override
@@ -85,7 +116,7 @@ public class MakeMemoActivity extends AppCompatActivity {
             tvFrom.setText(mFormatter.format(date));
             try {
                 Date dateTo = mFormatter.parse(tvTo.getText().toString());
-                if (date.compareTo(dateTo) <1) {
+                if (date.compareTo(dateTo) < 1) {
 
                 } else {
                     tvTo.setText(mFormatter.format(date));
@@ -96,6 +127,7 @@ public class MakeMemoActivity extends AppCompatActivity {
             }
 
         }
+
         // Optional cancel listener
         @Override
         public void onDateTimeCancel() {
@@ -111,7 +143,7 @@ public class MakeMemoActivity extends AppCompatActivity {
             TextView tvTo = (TextView) findViewById(R.id.tvTo);
             try {
                 Date dateFrom = mFormatter.parse(tvFrom.getText().toString());
-                if (dateFrom.compareTo(date) <1) {
+                if (dateFrom.compareTo(date) < 1) {
                     tvTo.setText(mFormatter.format(date));
                 } else {
                     tvTo.setText(dateFrom.toString());
@@ -130,12 +162,14 @@ public class MakeMemoActivity extends AppCompatActivity {
     };
 
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
+        Log.d("ABCDEF", "onActivityResult ");
         if (resultCode == RESULT_OK) {
             if (requestCode == SELECT_SINGLE_PICTURE) {
 
                 Uri selectedImageUri = data.getData();
                 try {
                     selectedImagePreview.setImageBitmap(new UserPicture(selectedImageUri, getContentResolver()).getBitmap());
+                    checkFirstTime=false;
                 } catch (IOException e) {
                     Log.e(MainActivity.class.getSimpleName(), "Failed to load image", e);
                 }
