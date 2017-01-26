@@ -16,6 +16,7 @@
         tools:context="com.example.trustring.memoappv10.MakeMemoActivity">
 
         <EditText
+            android:id="@+id/dtxTitle"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_margin="2dp"
@@ -26,6 +27,7 @@
             android:textStyle="normal" />
 
         <EditText
+            android:id="@+id/dtxDes"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_margin="2dp"
@@ -122,5 +124,11 @@
                 android:text="@string/Memo_Even_color" />
 
         </LinearLayout>
+        <Button
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:id="@+id/btnUpload"
+            android:text="UP Load"
+            android:onClick="onClick"/>
     </LinearLayout>
 </ScrollView>

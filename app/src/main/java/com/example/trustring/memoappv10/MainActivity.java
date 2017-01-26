@@ -101,12 +101,18 @@ public class MainActivity extends AppCompatActivity {
                                     long currentTime = System.currentTimeMillis() / 1000;
                                     Log.d(TAG, "path: " + path + ", dateAdded: " + dateAdded +
                                             ", currentTime: " + currentTime);
-                                    if (checkThreadCapture()){
+                                    Log.d(TAG, "Main Activiy IF before"+pathImage);
+
+                                    //cur.moveToNext();
+                                    if (checkThreadCapture() && dateAdded==currentTime){
                                         Intent openActivity = new Intent(MainActivity.this, MakeMemoActivity.class);
                                         openActivity.putExtra(PATHIMAGE, path);
+                                        openActivity.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
                                         startActivity(openActivity);
+                                        //finish();
+                                        Log.d(TAG, "Main Activiy IF inside");
                                     }
-
+                                    Log.d(TAG, "Main Activiy IF outside");
                                 }
                             } catch (Exception e) {
                                 Log.d(TAG, "open cursor fail" + e.toString());
