@@ -13,7 +13,10 @@
         android:paddingLeft="@dimen/activity_horizontal_margin"
         android:paddingRight="@dimen/activity_horizontal_margin"
         android:paddingTop="@dimen/activity_vertical_margin"
-        tools:context="com.example.trustring.memoappv10.MakeMemoActivity">
+        tools:context="com.example.trustring.memoappv10.MakeMemoActivity"
+        android:weightSum="1">
+
+
 
         <EditText
             android:id="@+id/dtxTitle"
@@ -131,4 +134,5 @@
             android:text="UP Load"
             android:onClick="onClick"/>
     </LinearLayout>
+
 </ScrollView>

@@ -32,19 +32,23 @@ import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.database.Cursor;
 import android.graphics.BitmapFactory;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.net.Uri;
+import android.nfc.Tag;
 import android.os.AsyncTask;
 import android.os.Parcelable;
 import android.os.SystemClock;
+import android.provider.MediaStore;
 import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.text.TextUtils;
 import android.text.method.ScrollingMovementMethod;
 import android.util.Log;
+import android.view.Menu;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
@@ -57,6 +61,7 @@ import android.widget.Toast;
 
 
 import java.io.IOException;
+import java.net.URI;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -70,6 +75,7 @@ import java.util.List;
 import java.util.ListIterator;
 import java.util.TimeZone;
 
+import cropImage.Crop;
 import pub.devrel.easypermissions.AfterPermissionGranted;
 import pub.devrel.easypermissions.EasyPermissions;
 import slideDateTimePicker.SlideDateTimeListener;
@@ -78,8 +84,7 @@ import slideDateTimePicker.SlideDateTimePicker;
 public class MakeMemoActivity extends AppCompatActivity implements EasyPermissions.PermissionCallbacks {
     //GOOGLE API ---------------
     GoogleAccountCredential mCredential;
-    private TextView mOutputText;
-    private Button mCallApiButton;
+
     ProgressDialog mProgress;
 
     static final int REQUEST_ACCOUNT_PICKER = 1000;
@@ -89,8 +94,8 @@ public class MakeMemoActivity extends AppCompatActivity implements EasyPermissio
 
     private static final String BUTTON_TEXT = "Call Google Calendar API";
     private static final String PREF_ACCOUNT_NAME = "accountName";
-    private static final String[] SCOPES = {CalendarScopes.CALENDAR,DriveScopes.DRIVE
-            };
+    private static final String[] SCOPES = {CalendarScopes.CALENDAR, DriveScopes.DRIVE
+    };
     //END
     private static final int SELECT_SINGLE_PICTURE = 101;
 
@@ -102,77 +107,95 @@ public class MakeMemoActivity extends AppCompatActivity implements EasyPermissio
 
     private SimpleDateFormat mFormatter = new SimpleDateFormat("MMMM dd yyyy hh:mm aa");
 
+    String ImagePath = "";
 
-
+    private ImageView resultView;
     boolean checkFirstTime = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        String TAG = "ABCD";
+        Log.d(TAG, "onCreate: chay vao on Create");
         checkFirstTime = true;
 
         super.onCreate(savedInstanceState);
 
-        LinearLayout activityLayout = new LinearLayout(this);
-        LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.MATCH_PARENT,
-                LinearLayout.LayoutParams.MATCH_PARENT);
-        activityLayout.setLayoutParams(lp);
-        activityLayout.setOrientation(LinearLayout.VERTICAL);
-        activityLayout.setPadding(16, 16, 16, 16);
-
-        ViewGroup.LayoutParams tlp = new ViewGroup.LayoutParams(
-                ViewGroup.LayoutParams.WRAP_CONTENT,
-                ViewGroup.LayoutParams.WRAP_CONTENT);
-
-        mCallApiButton = new Button(this);
-        mCallApiButton.setText(BUTTON_TEXT);
-        mCallApiButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                mCallApiButton.setEnabled(false);
-                mOutputText.setText("");
-                getResultsFromApi();
-                mCallApiButton.setEnabled(true);
-            }
-        });
-        activityLayout.addView(mCallApiButton);
-
-        mOutputText = new TextView(this);
-        mOutputText.setLayoutParams(tlp);
-        mOutputText.setPadding(16, 16, 16, 16);
-        mOutputText.setVerticalScrollBarEnabled(true);
-        mOutputText.setMovementMethod(new ScrollingMovementMethod());
-        mOutputText.setText(
-                "Click the \'" + BUTTON_TEXT +"\' button to test the API.");
-        activityLayout.addView(mOutputText);
+//        LinearLayout activityLayout = new LinearLayout(this);
+//        LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(
+//                LinearLayout.LayoutParams.MATCH_PARENT,
+//                LinearLayout.LayoutParams.MATCH_PARENT);
+//        activityLayout.setLayoutParams(lp);
+//        activityLayout.setOrientation(LinearLayout.VERTICAL);
+//        activityLayout.setPadding(16, 16, 16, 16);
+//
+//        ViewGroup.LayoutParams tlp = new ViewGroup.LayoutParams(
+//                ViewGroup.LayoutParams.WRAP_CONTENT,
+//                ViewGroup.LayoutParams.WRAP_CONTENT);
+//
+//        mCallApiButton = new Button(this);
+//        mCallApiButton.setText(BUTTON_TEXT);
+//        mCallApiButton.setOnClickListener(new View.OnClickListener() {
+//            @Override
+//            public void onClick(View v) {
+//                mCallApiButton.setEnabled(false);
+//                mOutputText.setText("");
+//                getResultsFromApi();
+//                mCallApiButton.setEnabled(true);
+//            }
+//        });
+//        activityLayout.addView(mCallApiButton);
+//
+//        mOutputText = new TextView(this);
+//        mOutputText.setLayoutParams(tlp);
+//        mOutputText.setPadding(16, 16, 16, 16);
+//        mOutputText.setVerticalScrollBarEnabled(true);
+//        mOutputText.setMovementMethod(new ScrollingMovementMethod());
+//        mOutputText.setText(
+//                "Click the \'" + BUTTON_TEXT +"\' button to test the API.");
+//        activityLayout.addView(mOutputText);
 
         mProgress = new ProgressDialog(this);
-        mProgress.setMessage("Calling Google Calendar API ...");
+        mProgress.setMessage("Calling Google API ...");
 
-        setContentView(activityLayout);
+        setContentView(R.layout.activity_make_memo);
 
         // Initialize credentials and service object.
         mCredential = GoogleAccountCredential.usingOAuth2(
                 getApplicationContext(), Arrays.asList(SCOPES))
                 .setBackOff(new ExponentialBackOff());
+        Log.d(TAG, "onCreate: chay dc on Create");
     }
 
     @Override
     protected void onStart() {
+
+        TextView tvFrom = (TextView) findViewById(R.id.tvFrom);
+        TextView tvTo = (TextView) findViewById(R.id.tvTo);
+        tvFrom.setText(mFormatter.format(new Date()));
+        tvTo.setText(mFormatter.format(new Date()));
         Intent intent = getIntent();
-        if (intent.getStringExtra(MainActivity.PATHIMAGE) != null && checkFirstTime) {
-
-
+        Log.d("ABCD", "Truoc khi Goi chinh sua anh ");
+        if (intent.getStringExtra(MainActivity.PATHIMAGE) != null) {
+            ImagePath =intent.getStringExtra(MainActivity.PATHIMAGE);
+            Log.d("ABCD", "Goi chinh sua anh"+ImagePath);
+            //Crop.pickImage(this);
+            //Uri destination = Uri.fromFile(new java.io.File(getCacheDir(), "cropped"));
+            //resultView = (ImageView) findViewById(R.id.result_image);
+            //resultView.setImageDrawable(null);
+            //Crop.of(Uri.fromFile(new java.io.File(ImagePath)),destination).start(this);
             selectedImagePreview = (ImageView) findViewById(R.id.imageView);
             selectedImagePreview.setImageURI(Uri.parse(new java.io.File(intent.getStringExtra(MainActivity.PATHIMAGE)).toString()));
         }
         super.onStart();
     }
-
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.activity_main, menu);
+        Log.d("ABCD", "onCreateOptionsMenu: ");
+        return super.onCreateOptionsMenu(menu);
+    }
     @Override
     protected void onResume() {
-
-
         super.onResume();
     }
 
@@ -204,6 +227,7 @@ public class MakeMemoActivity extends AppCompatActivity implements EasyPermissio
                         .show();
                 break;
             case R.id.btnUpload:
+                Log.d("ABCDEF", "CLICKKKK  ");
                 getResultsFromApi();
                 break;
         }
@@ -277,9 +301,9 @@ public class MakeMemoActivity extends AppCompatActivity implements EasyPermissio
         switch (requestCode) {
             case REQUEST_GOOGLE_PLAY_SERVICES:
                 if (resultCode != RESULT_OK) {
-                    mOutputText.setText(
-                            "This app requires Google Play Services. Please install " +
-                                    "Google Play Services on your device and relaunch this app.");
+//                    mOutputText.setText(
+//                            "This app requires Google Play Services. Please install " +
+//                                    "Google Play Services on your device and relaunch this app.");
                 } else {
                     getResultsFromApi();
                 }
@@ -310,8 +334,10 @@ public class MakeMemoActivity extends AppCompatActivity implements EasyPermissio
             if (requestCode == SELECT_SINGLE_PICTURE) {
 
                 Uri selectedImageUri = data.getData();
+                Log.e("FILE PATH =======", "Load image" + selectedImageUri.getPath());
                 try {
                     selectedImagePreview.setImageBitmap(new UserPicture(selectedImageUri, getContentResolver()).getBitmap());
+                    ImagePath = getImagePath(selectedImageUri);
                     checkFirstTime = false;
                 } catch (IOException e) {
                     Log.e(MainActivity.class.getSimpleName(), "Failed to load image", e);
@@ -371,7 +397,7 @@ public class MakeMemoActivity extends AppCompatActivity implements EasyPermissio
         } else if (mCredential.getSelectedAccountName() == null) {
             chooseAccount();
         } else if (!isDeviceOnline()) {
-            mOutputText.setText("No network connection available.");
+            // mOutputText.setText("No network connection available.");
         } else {
             new MakeRequestTask(mCredential).execute();
         }
@@ -536,6 +562,7 @@ public class MakeMemoActivity extends AppCompatActivity implements EasyPermissio
         private Exception mLastError = null;
 
         MakeRequestTask(GoogleAccountCredential credential) {
+
             HttpTransport transport = AndroidHttp.newCompatibleTransport();
             JsonFactory jsonFactory = JacksonFactory.getDefaultInstance();
             mService = new com.google.api.services.calendar.Calendar.Builder(
@@ -546,6 +573,7 @@ public class MakeMemoActivity extends AppCompatActivity implements EasyPermissio
                     transport, jsonFactory, credential)
                     .setApplicationName("Android memoappv10")
                     .build();
+            Log.d("ABC", "MakeRequestTask ");
         }
 
         /**
@@ -556,6 +584,7 @@ public class MakeMemoActivity extends AppCompatActivity implements EasyPermissio
         @Override
         protected List<String> doInBackground(Void... params) {
             try {
+                Log.d("ABC", "List<String> getDataFromApi() ");
                 return getDataFromApi();
             } catch (Exception e) {
                 mLastError = e;
@@ -573,45 +602,56 @@ public class MakeMemoActivity extends AppCompatActivity implements EasyPermissio
         private List<String> getDataFromApi() throws IOException {
 
 // Upload file capture to Google Drive
-
             File fileMetadata = new File();
-            fileMetadata.setName("Capture -"+System.currentTimeMillis());
-            fileMetadata.setMimeType("image/png");
+            File file = new File();
+            if (ImagePath != null) {
 
-            java.io.File filePath = new java.io.File("/storage/emulated/0/Pictures/Screenshots/Screenshot_20170126-183356.png");
-            FileContent mediaContent = new FileContent("image/png", filePath);
-            File file = mServicedrive.files().create(fileMetadata, mediaContent)
-                    .setFields("id")
-                    .execute();
-            System.out.println("File ID: " + file.getId());
+
+                fileMetadata.setName("Capture -" + System.currentTimeMillis());
+                fileMetadata.setMimeType("image/png");
+                Log.d("ABC", "getDataFromApi: " + ImagePath);
+                java.io.File filePath = new java.io.File(ImagePath);
+                FileContent mediaContent = new FileContent("image/png", filePath);
+                file = mServicedrive.files().create(fileMetadata, mediaContent)
+                        .setFields("id")
+                        .execute();
+                System.out.println("File ID: " + file.getId());
+            }
             //Get View
+            EditText memoname = (EditText) findViewById(R.id.dtxTitle);
+            EditText memodes = (EditText) findViewById(R.id.dtxDes);
 
-
-
+            TextView tvFrom = (TextView) findViewById(R.id.tvFrom);
+            TextView tvTo = (TextView) findViewById(R.id.tvTo);
             Event event2 = new Event()
-                    .setSummary("Tam Nguyen")
-                    .setDescription("Tam Nguyen");
+                    .setSummary(memoname.getText().toString())
+                    .setDescription(memodes.getText().toString());
+            Date dtFrom=null;
+            Date dtTo=null;
+            try{
+                dtFrom=mFormatter.parse(tvFrom.getText().toString());
+               dtTo=mFormatter.parse(tvTo.getText().toString());
+            }catch (Exception e){}
 
-            DateTime startDateTime = new DateTime("2017-01-27T09:00:00-07:00");
+            DateTime startDateTime = new DateTime(dtFrom);
             EventDateTime start2 = new EventDateTime()
-                    .setDateTime(startDateTime)
-                    ;
+                    .setDateTime(startDateTime);
             event2.setStart(start2);
 
-            DateTime endDateTime = new DateTime("2017-01-27T10:00:00-07:00");
+            DateTime endDateTime = new DateTime(dtTo);
             EventDateTime end2 = new EventDateTime()
-                    .setDateTime(endDateTime)
-                    ;
+                    .setDateTime(endDateTime);
             event2.setEnd(end2);
+            if (ImagePath != null) {
+                List<EventAttachment> attachments = new ArrayList<EventAttachment>();
 
-            List<EventAttachment> attachments = new ArrayList<EventAttachment>();
-
-            attachments.add(new EventAttachment()
-                    .setFileUrl("https://drive.google.com/file/d/"+file.getId()+"/view?usp=drive_web")
-                    .setFileId(file.getId())
-                    .setMimeType(file.getMimeType())
-                    .setTitle(file.getName()));
-            event2.setAttachments(attachments);
+                attachments.add(new EventAttachment()
+                        .setFileUrl("https://drive.google.com/file/d/" + file.getId() + "/view?usp=drive_web")
+                        .setFileId(file.getId())
+                        .setMimeType(file.getMimeType())
+                        .setTitle(file.getName()));
+                event2.setAttachments(attachments);
+            }
             String calendarId = "primary";
             event2 = mService.events().insert(calendarId, event2).setSupportsAttachments(true).execute();
             System.out.printf("Event created: %s\n", event2.getHtmlLink());
@@ -623,18 +663,20 @@ public class MakeMemoActivity extends AppCompatActivity implements EasyPermissio
 
         @Override
         protected void onPreExecute() {
-            mOutputText.setText("");
+            Log.d("ABC", "onPreExecute: ");
+            // mOutputText.setText("");
             mProgress.show();
         }
 
         @Override
         protected void onPostExecute(List<String> output) {
             mProgress.hide();
+            Log.d("ABC", "onPostExecute: ");
             if (output == null || output.size() == 0) {
-                mOutputText.setText("No results returned.");
+                //  mOutputText.setText("No results returned.");
             } else {
                 output.add(0, "Data retrieved using the Google Calendar API:");
-                mOutputText.setText(TextUtils.join("\n", output));
+                // mOutputText.setText(TextUtils.join("\n", output));
             }
         }
 
@@ -651,32 +693,29 @@ public class MakeMemoActivity extends AppCompatActivity implements EasyPermissio
                             ((UserRecoverableAuthIOException) mLastError).getIntent(),
                             MakeMemoActivity.REQUEST_AUTHORIZATION);
                 } else {
-                    mOutputText.setText("The following error occurred:\n"
-                            + mLastError.getMessage());
+//                    mOutputText.setText("The following error occurred:\n"
+//                            + mLastError.getMessage());
                 }
             } else {
-                mOutputText.setText("Request cancelled.");
+                //  mOutputText.setText("Request cancelled.");
             }
         }
     }
-    public static void addAttachment(com.google.api.services.calendar.Calendar calendarService, Drive driveService, String calendarId,
-                                     String eventId, String fileId) throws IOException {
-        File file = driveService.files().get(fileId).execute();
-        Event event = calendarService.events().get(calendarId, eventId).execute();
 
-        List<EventAttachment> attachments = event.getAttachments();
-        if (attachments == null) {
-            attachments = new ArrayList<EventAttachment>();
-        }
-        attachments.add(new EventAttachment()
-                .setFileUrl("https://drive.google.com/file/d/"+file.getId()+"/view?usp=drive_web")
-                .setMimeType(file.getMimeType())
-                .setTitle(file.getName()));
+    public String getImagePath(Uri uri) {
+        Cursor cursor = getContentResolver().query(uri, null, null, null, null);
+        cursor.moveToFirst();
+        String document_id = cursor.getString(0);
+        document_id = document_id.substring(document_id.lastIndexOf(":") + 1);
+        cursor.close();
 
-        Event changes = new Event()
-                .setAttachments(attachments);
-        calendarService.events().patch(calendarId, eventId, changes)
-                .setSupportsAttachments(true)
-                .execute();
+        cursor = getContentResolver().query(
+                android.provider.MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
+                null, MediaStore.Images.Media._ID + " = ? ", new String[]{document_id}, null);
+        cursor.moveToFirst();
+        String path = cursor.getString(cursor.getColumnIndex(MediaStore.Images.Media.DATA));
+        cursor.close();
+
+        return path;
     }
 }

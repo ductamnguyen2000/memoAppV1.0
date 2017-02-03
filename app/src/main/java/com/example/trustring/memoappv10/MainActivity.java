@@ -105,7 +105,7 @@ public class MainActivity extends AppCompatActivity {
 
                                     //cur.moveToNext();
                                     if (checkThreadCapture() && dateAdded==currentTime){
-                                        Intent openActivity = new Intent(MainActivity.this, MakeMemoActivity.class);
+                                        Intent openActivity = new Intent(MainActivity.this, ImageEditActivity.class);
                                         openActivity.putExtra(PATHIMAGE, path);
                                         openActivity.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
                                         startActivity(openActivity);
@@ -143,9 +143,9 @@ public class MainActivity extends AppCompatActivity {
             case R.id.btnCapture:
                 Button btnCapture = (Button) findViewById(R.id.btnCapture);
                 if (checkThreadCapture()) {
-                    btnCapture.setText("Capture Start");
+                    btnCapture.setText(R.string.CaptureStart);
                 } else {
-                    btnCapture.setText("Capture Stop");
+                    btnCapture.setText(R.string.CaptureStop);
                 }
                 checkThreadCapture();
                 Toast.makeText(MainActivity.this, "Captuer !", Toast.LENGTH_SHORT).show();
@@ -157,6 +157,7 @@ public class MainActivity extends AppCompatActivity {
 
                 Toast.makeText(MainActivity.this, "Open new Form !", Toast.LENGTH_LONG).show();
                 Log.d(TAG, "onClick() called with: new = [" + view + "]");
+                Log.d("ABCD", "Man hinh 1 xong");
                 break;
         }
     }
@@ -192,7 +193,7 @@ public class MainActivity extends AppCompatActivity {
 
     public boolean checkThreadCapture() {
         Button btnCapture = (Button) findViewById(R.id.btnCapture);
-        if (btnCapture.getText().toString().compareTo("Capture Stop")==0) {
+        if (btnCapture.getText().toString().compareTo("Capture Detect Stop")==0) {
             return true;
         } else {
             return false;

@@ -1,8 +1,16 @@
-<resources>
+<resources xmlns:tools="http://schemas.android.com/tools">
     <string name="app_name">memoAppV1.0</string>
     <string name="Memo_Name_hint">メモ名入力</string>
     <string name="Memo_Describe_hint">メモ内容入力</string>
     <string name="Memo_Load_image">画像編集</string>
     <string name="Memo_UnLoad_image">キャンセル</string>
     <string name="Memo_Even_color">イベント色</string>
+    <string name="CaptureStart">Capture Detect Start</string>
+    <string name="CaptureStop">Capture Detect Stop</string>
+    <string name="crop__saving">Saving picture…</string>
+    <string name="crop__wait">Please wait…</string>
+    <string name="crop__pick_error">No image sources available</string>
+    <string name="crop__done">DONE</string>
+    <string name="crop__cancel" tools:ignore="ButtonCase">CANCEL</string>
+    <string name="action_select">Pick</string>
 </resources>
